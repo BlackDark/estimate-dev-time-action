@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Estimate Development Time
-        uses: BlackDark/estimate-dev-time-action@main
+        uses: BlackDark/estimate-dev-time-action@refactor/node
         with:
           # Required: Your OpenRouter API key (store in repository secrets)
           openrouter-api-key: ${{ secrets.OPENROUTER_API_KEY }}

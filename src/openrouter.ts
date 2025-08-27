@@ -50,10 +50,31 @@ export class OpenRouterClient {
       return this.parseResponse(content, request.skillLevels);
     } catch (error) {
       if (error instanceof OpenAI.APIError) {
-        throw new Error(
-          `OpenRouter API error: ${error.status} - ${error.message}`
-        );
+        // Provide cleaner error messages based on status codes
+        let cleanMessage = error.message;
+        
+        if (error.status === 401) {
+          cleanMessage = 'Invalid API key. Please check your OpenRouter API key.';
+        } else if (error.status === 403) {
+          cleanMessage = 'Access forbidden. Please verify your OpenRouter API key permissions.';
+        } else if (error.status === 404) {
+          cleanMessage = `Model '${this.model}' not found. Please check the model name.`;
+        } else if (error.status === 429) {
+          cleanMessage = 'Rate limit exceeded. Please try again later.';
+        } else if (error.status >= 500) {
+          cleanMessage = 'OpenRouter service unavailable. Please try again later.';
+        }
+        
+        throw new Error(`OpenRouter API error: ${cleanMessage}`);
       }
+      
+      if (error instanceof Error) {
+        // Handle network errors
+        if (error.message.includes('fetch')) {
+          throw new Error('Network error: Unable to connect to OpenRouter API. Please check your internet connection.');
+        }
+      }
+      
       throw error;
     }
   }

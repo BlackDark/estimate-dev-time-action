@@ -82,9 +82,25 @@ ${prChanges.diffContent}
     core.setOutput('estimations', JSON.stringify(estimation.estimations));
     core.setOutput('skill-levels', validSkillLevels.join(','));
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error occurred';
-    core.error(`Action failed: ${errorMessage}`);
+    let errorMessage = 'Unknown error occurred';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      
+      // Log additional context for debugging without exposing full stack trace to user
+      core.debug(`Full error details: ${error.stack || error.toString()}`);
+      
+      // Provide more helpful error messages for common issues
+      if (error.message.includes('GITHUB_TOKEN')) {
+        errorMessage = 'GitHub token is missing or invalid. Please ensure GITHUB_TOKEN is properly configured.';
+      } else if (error.message.includes('OpenRouter')) {
+        errorMessage = `OpenRouter API error: ${error.message.replace(/^OpenRouter API error:\s*/, '')}`;
+      } else if (error.message.includes('No response content')) {
+        errorMessage = 'OpenRouter API returned empty response. Please check your API key and model configuration.';
+      }
+    }
+    
+    core.error(`❌ Action failed: ${errorMessage}`);
     core.setFailed(errorMessage);
   }
 }
@@ -94,3 +110,5 @@ if (require.main === module) {
 }
 
 export { run };
+export { OpenRouterClient } from './openrouter';
+export { GitHubClient } from './github';
