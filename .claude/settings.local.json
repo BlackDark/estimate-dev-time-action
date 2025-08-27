@@ -3,7 +3,11 @@
     "allow": [
       "Bash(npm run lint)",
       "Bash(pnpm run lint:*)",
-      "Bash(pnpm run:*)"
+      "Bash(pnpm run:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm lint:*)"
     ],
     "deny": [],
     "ask": []

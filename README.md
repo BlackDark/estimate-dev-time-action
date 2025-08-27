@@ -8,6 +8,7 @@ A GitHub Action that uses AI to estimate how long it would take developers of di
 - 🤖 Uses OpenRouter AI models with official OpenAI SDK for robust API handling
 - 💬 Automatically adds/updates comments on PRs with estimates
 - 🎛️ Configurable skill levels and AI models
+- 🚫 Smart filtering of generated files and build artifacts for accurate estimates
 - 🆓 Free model available by default
 
 ## Usage
@@ -52,6 +53,7 @@ jobs:
           openrouter-api-key: ${{ secrets.OPENROUTER_API_KEY }}
           model: 'openai/gpt-3.5-turbo'  # Optional: specify a different model
           skill-levels: 'Junior,Senior'  # Optional: only estimate for specific levels
+          ignore-patterns: 'dist/**,build/**,*.generated.ts,docs/**'  # Optional: ignore specific files
 ```
 
 ## Inputs
@@ -62,6 +64,7 @@ jobs:
 | `model` | OpenRouter model to use | ❌ | `meta-llama/llama-3.2-3b-instruct:free` |
 | `skill-levels` | Comma-separated skill levels to estimate | ❌ | `Junior,Senior,Expert` |
 | `github-token` | GitHub token for API access | ❌ | `${{ github.token }}` |
+| `ignore-patterns` | Comma-separated glob patterns to ignore | ❌ | `dist/**,build/**,*.min.js,*.bundle.js,package-lock.json,pnpm-lock.yaml,yarn.lock,*.map` |
 
 ## Outputs
 
@@ -88,6 +91,34 @@ Go to your repository → Settings → Secrets and variables → Actions → New
 ### 3. Create Workflow File
 
 Create `.github/workflows/estimate-dev-time.yml` with the configuration above.
+
+## 🚫 Ignoring Files
+
+The action automatically ignores common generated files and build artifacts to provide more accurate estimates. You can customize this with the `ignore-patterns` input:
+
+### Default Ignored Patterns
+- `dist/**` - Distribution/build directories  
+- `build/**` - Build output directories
+- `*.min.js` - Minified JavaScript files
+- `*.bundle.js` - Bundled JavaScript files  
+- `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock` - Lock files
+- `*.map` - Source map files
+
+### Custom Ignore Patterns
+```yaml
+- name: Estimate Development Time
+  uses: your-username/estimate-dev-time-action@v1
+  with:
+    openrouter-api-key: ${{ secrets.OPENROUTER_API_KEY }}
+    ignore-patterns: 'dist/**,*.generated.*,docs/**,test/fixtures/**'
+```
+
+### Pattern Examples
+- `dist/**` - Ignore everything in dist directory
+- `*.min.js` - Ignore all .min.js files  
+- `src/generated/**` - Ignore generated source files
+- `**/*.test.js` - Ignore all test files
+- `README.md` - Ignore specific file
 
 ## Example Output
 

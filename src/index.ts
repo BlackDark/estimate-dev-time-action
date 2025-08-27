@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import { OpenRouterClient } from './openrouter';
 import { GitHubClient } from './github';
 import { formatEstimationComment } from './formatter';
+import { filterDiffByPatterns, parseIgnorePatterns } from './diff-filter';
 import { ActionInputs, SkillLevel } from './types';
 
 async function run(): Promise<void> {
@@ -12,6 +13,7 @@ async function run(): Promise<void> {
       openrouterApiKey: core.getInput('openrouter-api-key', { required: true }),
       model: core.getInput('model') || 'meta-llama/llama-3.2-3b-instruct:free',
       skillLevels: core.getInput('skill-levels'),
+      ignorePatterns: core.getInput('ignore-patterns'),
     };
 
     const skillLevels: SkillLevel[] = inputs.skillLevels
@@ -48,25 +50,65 @@ async function run(): Promise<void> {
     core.info('Fetching PR changes...');
     const prChanges = await githubClient.getPrChanges();
 
+    // Parse and apply ignore patterns
+    const ignorePatterns = parseIgnorePatterns(inputs.ignorePatterns || '');
+    const { filteredDiff, filteredStats, fileTypeAnalysis } =
+      filterDiffByPatterns(prChanges.diffContent, ignorePatterns);
+
+    // Use filtered stats if filtering was applied, otherwise use original
+    const finalStats =
+      ignorePatterns.length > 0
+        ? filteredStats
+        : {
+            additions: prChanges.additions,
+            deletions: prChanges.deletions,
+            changedFiles: prChanges.changedFiles,
+          };
+
+    // Use filtered diff content
+    const finalDiffContent =
+      ignorePatterns.length > 0 ? filteredDiff : prChanges.diffContent;
+
     core.info(
-      `PR Summary: +${prChanges.additions} -${prChanges.deletions} across ${prChanges.changedFiles} files`
+      `Original PR: +${prChanges.additions} -${prChanges.deletions} across ${prChanges.changedFiles} files`
     );
 
+    if (ignorePatterns.length > 0) {
+      core.info(
+        `Filtered PR (excluding ${ignorePatterns.length} patterns): +${finalStats.additions} -${finalStats.deletions} across ${finalStats.changedFiles} files`
+      );
+      core.info(`Ignored patterns: ${ignorePatterns.join(', ')}`);
+    }
+
+    // Log file type analysis for debugging
+    const fileTypeSummary = [
+      `Code files: ${fileTypeAnalysis.codeFiles.length}`,
+      `Config files: ${fileTypeAnalysis.configFiles.length}`,
+      `Test files: ${fileTypeAnalysis.testFiles.length}`,
+      `Documentation: ${fileTypeAnalysis.documentationFiles.length}`,
+      `Build/CI: ${fileTypeAnalysis.buildFiles.length}`,
+      `Other: ${fileTypeAnalysis.otherFiles.length}`,
+    ].join(', ');
+    core.info(`File types: ${fileTypeSummary}`);
+
     const changes = `
-**Files Changed:** ${prChanges.changedFiles}
-**Lines Added:** +${prChanges.additions}
-**Lines Deleted:** -${prChanges.deletions}
+**Files Changed:** ${finalStats.changedFiles}
+**Lines Added:** +${finalStats.additions}
+**Lines Deleted:** -${finalStats.deletions}
 
 **Diff:**
-${prChanges.diffContent}
+${finalDiffContent}
 `.trim();
 
     core.info('Requesting estimation from OpenRouter...');
-    const estimation = await openrouterClient.estimateDevTime({
-      prChanges: changes,
-      skillLevels: validSkillLevels,
-      model: inputs.model!,
-    });
+    const estimation = await openrouterClient.estimateDevTime(
+      {
+        prChanges: changes,
+        skillLevels: validSkillLevels,
+        model: inputs.model!,
+      },
+      fileTypeAnalysis
+    );
 
     core.info('Formatting comment...');
     const commentContent = formatEstimationComment(
@@ -82,9 +124,27 @@ ${prChanges.diffContent}
     core.setOutput('estimations', JSON.stringify(estimation.estimations));
     core.setOutput('skill-levels', validSkillLevels.join(','));
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error occurred';
-    core.error(`Action failed: ${errorMessage}`);
+    let errorMessage = 'Unknown error occurred';
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+
+      // Log additional context for debugging without exposing full stack trace to user
+      core.debug(`Full error details: ${error.stack || error.toString()}`);
+
+      // Provide more helpful error messages for common issues
+      if (error.message.includes('GITHUB_TOKEN')) {
+        errorMessage =
+          'GitHub token is missing or invalid. Please ensure GITHUB_TOKEN is properly configured.';
+      } else if (error.message.includes('OpenRouter')) {
+        errorMessage = `OpenRouter API error: ${error.message.replace(/^OpenRouter API error:\s*/, '')}`;
+      } else if (error.message.includes('No response content')) {
+        errorMessage =
+          'OpenRouter API returned empty response. Please check your API key and model configuration.';
+      }
+    }
+
+    core.error(`❌ Action failed: ${errorMessage}`);
     core.setFailed(errorMessage);
   }
 }
@@ -94,3 +154,6 @@ if (require.main === module) {
 }
 
 export { run };
+export { OpenRouterClient } from './openrouter';
+export { GitHubClient } from './github';
+export { filterDiffByPatterns, parseIgnorePatterns } from './diff-filter';
