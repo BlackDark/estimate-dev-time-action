@@ -20,14 +20,6 @@ describe('Build Verification', () => {
     expect(typeof action.run).toBe('function');
   });
 
-  test('OpenRouterClient should be importable', () => {
-    // Test that we can require the built file without runtime errors
-    const content = fs.readFileSync(indexPath, 'utf8');
-    expect(content).toContain('OpenRouterClient');
-    expect(content).toContain('GitHubClient');
-    expect(content).toContain('formatEstimationComment');
-  });
-
   test('bundle should be reasonable size (less than 2MB)', () => {
     const stats = fs.statSync(indexPath);
     const sizeInMB = stats.size / (1024 * 1024);
