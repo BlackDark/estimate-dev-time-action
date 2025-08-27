@@ -52,7 +52,7 @@ async function run(): Promise<void> {
 
     // Parse and apply ignore patterns
     const ignorePatterns = parseIgnorePatterns(inputs.ignorePatterns || '');
-    const { filteredDiff, filteredStats } = filterDiffByPatterns(
+    const { filteredDiff, filteredStats, fileTypeAnalysis } = filterDiffByPatterns(
       prChanges.diffContent,
       ignorePatterns
     );
@@ -78,6 +78,17 @@ async function run(): Promise<void> {
       core.info(`Ignored patterns: ${ignorePatterns.join(', ')}`);
     }
 
+    // Log file type analysis for debugging
+    const fileTypeSummary = [
+      `Code files: ${fileTypeAnalysis.codeFiles.length}`,
+      `Config files: ${fileTypeAnalysis.configFiles.length}`,
+      `Test files: ${fileTypeAnalysis.testFiles.length}`,
+      `Documentation: ${fileTypeAnalysis.documentationFiles.length}`,
+      `Build/CI: ${fileTypeAnalysis.buildFiles.length}`,
+      `Other: ${fileTypeAnalysis.otherFiles.length}`
+    ].join(', ');
+    core.info(`File types: ${fileTypeSummary}`);
+
     const changes = `
 **Files Changed:** ${finalStats.changedFiles}
 **Lines Added:** +${finalStats.additions}
@@ -91,8 +102,8 @@ ${finalDiffContent}
     const estimation = await openrouterClient.estimateDevTime({
       prChanges: changes,
       skillLevels: validSkillLevels,
-      model: inputs.model!,
-    });
+      model: inputs.model!
+    }, fileTypeAnalysis);
 
     core.info('Formatting comment...');
     const commentContent = formatEstimationComment(

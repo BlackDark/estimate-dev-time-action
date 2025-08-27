@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { EstimationRequest, EstimationResponse, SkillLevel } from './types';
+import { FileTypeAnalysis } from './diff-filter';
 
 const DEFAULT_MODEL = 'meta-llama/llama-3.2-3b-instruct:free';
 
@@ -20,9 +21,10 @@ export class OpenRouterClient {
   }
 
   async estimateDevTime(
-    request: EstimationRequest
+    request: EstimationRequest,
+    fileTypeAnalysis?: FileTypeAnalysis
   ): Promise<EstimationResponse> {
-    const prompt = this.buildPrompt(request.prChanges, request.skillLevels);
+    const prompt = this.buildPrompt(request.prChanges, request.skillLevels, fileTypeAnalysis);
 
     try {
       const completion = await this.client.chat.completions.create({
@@ -79,41 +81,86 @@ export class OpenRouterClient {
     }
   }
 
-  private buildPrompt(prChanges: string, skillLevels: SkillLevel[]): string {
-    const levelsText = skillLevels.join(', ');
+  private buildPrompt(prChanges: string, skillLevels: SkillLevel[], fileTypeAnalysis?: FileTypeAnalysis): string {
+    
+    let fileContextSection = '';
+    if (fileTypeAnalysis) {
+      const fileTypeSummary = [];
+      if (fileTypeAnalysis.codeFiles.length > 0) {
+        fileTypeSummary.push(`**Code files (${fileTypeAnalysis.codeFiles.length}):** ${fileTypeAnalysis.codeFiles.slice(0, 5).join(', ')}${fileTypeAnalysis.codeFiles.length > 5 ? '...' : ''}`);
+      }
+      if (fileTypeAnalysis.configFiles.length > 0) {
+        fileTypeSummary.push(`**Configuration files (${fileTypeAnalysis.configFiles.length}):** ${fileTypeAnalysis.configFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.configFiles.length > 3 ? '...' : ''}`);
+      }
+      if (fileTypeAnalysis.testFiles.length > 0) {
+        fileTypeSummary.push(`**Test files (${fileTypeAnalysis.testFiles.length}):** ${fileTypeAnalysis.testFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.testFiles.length > 3 ? '...' : ''}`);
+      }
+      if (fileTypeAnalysis.buildFiles.length > 0) {
+        fileTypeSummary.push(`**Build/CI files (${fileTypeAnalysis.buildFiles.length}):** ${fileTypeAnalysis.buildFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.buildFiles.length > 3 ? '...' : ''}`);
+      }
+      if (fileTypeAnalysis.documentationFiles.length > 0) {
+        fileTypeSummary.push(`**Documentation (${fileTypeAnalysis.documentationFiles.length}):** ${fileTypeAnalysis.documentationFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.documentationFiles.length > 3 ? '...' : ''}`);
+      }
+      if (fileTypeAnalysis.otherFiles.length > 0) {
+        fileTypeSummary.push(`**Other files (${fileTypeAnalysis.otherFiles.length}):** ${fileTypeAnalysis.otherFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.otherFiles.length > 3 ? '...' : ''}`);
+      }
+      
+      if (fileTypeSummary.length > 0) {
+        fileContextSection = `
+
+**File Type Analysis:**
+${fileTypeSummary.join('\n')}
+
+**Estimation Context Based on File Types:**
+- Configuration changes typically require research time for unfamiliar tools (varies by experience)
+- Code changes leverage existing patterns and team knowledge (faster implementation)
+- Test files indicate comprehensive testing approach (factor in test writing/updating time)  
+- Build/CI changes may require cross-system knowledge and debugging
+- Documentation updates are usually straightforward but vary by complexity
+
+`;
+      }
+    }
 
     return `
 You are an experienced software engineering manager. Analyze the following PR changes and provide REALISTIC time estimates for implementing these specific changes. Focus on actual development work and avoid overestimating.
 
 **IMPORTANT GUIDELINES:**
-- This represents changes to an EXISTING codebase, not building from scratch
+- Developers are FAMILIAR with this existing codebase and its patterns
 - Generated files, build artifacts, and lock files have been filtered out
 - Estimate ONLY the time needed to make these specific changes
-- Consider that developers can copy/paste/modify existing patterns
-- Most changes involve adapting existing code rather than creating new architecture
+- Developers can leverage existing code patterns and team knowledge
+- Consider the learning curve for unfamiliar tools/technologies in the changes
 
 **PR Changes:**
 \`\`\`
 ${prChanges}
-\`\`\`
+\`\`\`${fileContextSection}
 
 **Skill Level Definitions:**
-- **Junior**: 0-2 years experience, slower at debugging, needs some guidance
-- **Senior**: 3-7 years experience, works efficiently, knows common patterns
-- **Expert**: 8+ years experience, very fast implementation, rarely gets stuck
+- **Junior**: 0-2 years experience, familiar with this codebase, but may need time to research unfamiliar tools/configs, less experience with cross-domain work
+- **Senior**: 3-5 years experience, familiar with this codebase, comfortable with most common tools and patterns, good at adapting existing solutions
+- **Expert**: 5+ years experience, familiar with this codebase, extensive experience across multiple tools/domains, quickly identifies optimal approaches
 
-**Time Estimation Guidelines:**
-- Small config/text changes: 15-30 minutes
-- Simple function modifications: 30 minutes - 2 hours  
-- Adding new features: 2-8 hours
-- Complex refactoring: 1-3 days
-- Major architectural changes: 3-5 days
+**Time Estimation Guidelines (for developers familiar with codebase):**
+- Simple config/documentation changes: 15-30 minutes
+- Function modifications with existing patterns: 30 minutes - 2 hours
+- New features using familiar tools: 2-6 hours
+- Configuration with unfamiliar tools: 4-8 hours (research + implementation)
+- Cross-domain work (CI/CD + backend + frontend): Add 50-100% time for junior developers
+- Complex integrations or new tool adoption: 1-2 days
 
 **Consider for each estimate:**
-1. Understanding the existing code context (usually quick for small changes)
-2. Making the actual changes (main time component)
-3. Basic testing and debugging
-4. Creating/updating tests if needed
+1. Time to understand the specific changes needed (quick since familiar with codebase)
+2. Research time for unfamiliar tools/technologies (varies greatly by experience level)
+3. Implementation time (main component)
+4. Testing and debugging (includes learning new tool behaviors)
+5. Integration issues with existing systems
+
+**Experience Level Impact:**
+- **Junior**: May need 2-3x more time for unfamiliar tools, cross-domain changes take longer
+- **Senior**: Efficient with known tools, moderate research time for new ones
+- **Expert**: Minimal research time, can quickly adapt patterns across domains
 
 **Response Format (JSON):**
 \`\`\`json

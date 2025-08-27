@@ -4,7 +4,10 @@
       "Bash(npm run lint)",
       "Bash(pnpm run lint:*)",
       "Bash(pnpm run:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm lint:*)"
     ],
     "deny": [],
     "ask": []

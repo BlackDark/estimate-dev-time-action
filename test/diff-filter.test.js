@@ -50,7 +50,8 @@ index 1234567..abcdefg 100644
     const { filteredDiff, filteredStats } = filterDiffByPatterns(mockDiff, []);
     
     expect(filteredDiff).toBe(mockDiff);
-    expect(filteredStats.additions).toBe(0); // Will be 0 because no patterns means no filtering applied
+    expect(filteredStats.additions).toBe(1); // Now calculates stats even with no patterns
+    expect(filteredStats.changedFiles).toBe(1);
   });
 
   test('should handle glob patterns correctly', () => {
@@ -75,5 +76,52 @@ index 1234567..abcdefg 100644
         expect(filteredDiff).toContain(file);
       }
     });
+  });
+
+  test('filterDiffByPatterns should categorize file types correctly', () => {
+    const mockDiff = `diff --git a/src/components/Button.tsx b/src/components/Button.tsx
+index 1234567..abcdefg 100644
+--- a/src/components/Button.tsx
++++ b/src/components/Button.tsx
+@@ -1,3 +1,4 @@
++import React from 'react';
+ export const Button = () => {
+   return <button>Click me</button>;
+ };
+diff --git a/package.json b/package.json
+index 2345678..bcdefgh 100644
+--- a/package.json
++++ b/package.json
+@@ -1,3 +1,4 @@
++  "version": "1.0.1",
+   "name": "test-package",
+   "dependencies": {}
+ }
+diff --git a/src/components/Button.test.tsx b/src/components/Button.test.tsx
+index 3456789..cdefghi 100644
+--- a/src/components/Button.test.tsx
++++ b/src/components/Button.test.tsx
+@@ -1,3 +1,4 @@
++import { render } from '@testing-library/react';
+ import { Button } from './Button';
+
+ test('renders button', () => {
+diff --git a/README.md b/README.md
+index 4567890..defghij 100644
+--- a/README.md
++++ b/README.md
+@@ -1,3 +1,4 @@
++# Updated Project
+ # Test Project
+
+ This is a test.`;
+    
+    const result = filterDiffByPatterns(mockDiff, []);
+    
+    
+    expect(result.fileTypeAnalysis.codeFiles).toContain('src/components/Button.tsx');
+    expect(result.fileTypeAnalysis.configFiles).toContain('package.json');
+    expect(result.fileTypeAnalysis.testFiles).toContain('src/components/Button.test.tsx');
+    expect(result.fileTypeAnalysis.documentationFiles).toContain('README.md');
   });
 });
