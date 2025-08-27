@@ -1,6 +1,6 @@
 describe('Integration Tests', () => {
   let actionModule;
-  
+
   beforeAll(() => {
     // Load the built action module
     actionModule = require('../dist/index.js');
@@ -41,14 +41,14 @@ describe('Integration Tests', () => {
         Junior: {
           timeEstimate: '2-3 hours',
           reasoning: 'Simple task',
-          complexity: 'Low'
-        }
-      }
+          complexity: 'Low',
+        },
+      },
     });
 
     // Basic validation that the format is correct
     const parsedContent = `\`\`\`json\n${testResponse}\n\`\`\``;
-    
+
     expect(parsedContent).toContain('estimations');
     expect(parsedContent).toContain('Junior');
     expect(parsedContent).toContain('timeEstimate');

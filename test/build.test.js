@@ -37,10 +37,15 @@ describe('Build Verification', () => {
 
   test('should contain required dependencies', () => {
     const content = fs.readFileSync(indexPath, 'utf8');
-    
+
     // Check that essential dependencies are bundled (after minification, names may be transformed)
     expect(content).toContain('chat/completions'); // OpenAI SDK endpoint
-    expect(content.includes('getInput') || content.includes('setOutput')).toBe(true); // GitHub Actions core
-    expect(content.includes('getPrChanges') || content.includes('updateOrCreateComment')).toBe(true); // Our GitHub functionality
+    expect(content.includes('getInput') || content.includes('setOutput')).toBe(
+      true
+    ); // GitHub Actions core
+    expect(
+      content.includes('getPrChanges') ||
+        content.includes('updateOrCreateComment')
+    ).toBe(true); // Our GitHub functionality
   });
 });

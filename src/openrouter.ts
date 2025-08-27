@@ -24,7 +24,11 @@ export class OpenRouterClient {
     request: EstimationRequest,
     fileTypeAnalysis?: FileTypeAnalysis
   ): Promise<EstimationResponse> {
-    const prompt = this.buildPrompt(request.prChanges, request.skillLevels, fileTypeAnalysis);
+    const prompt = this.buildPrompt(
+      request.prChanges,
+      request.skillLevels,
+      fileTypeAnalysis
+    );
 
     try {
       const completion = await this.client.chat.completions.create({
@@ -54,57 +58,77 @@ export class OpenRouterClient {
       if (error instanceof OpenAI.APIError) {
         // Provide cleaner error messages based on status codes
         let cleanMessage = error.message;
-        
+
         if (error.status === 401) {
-          cleanMessage = 'Invalid API key. Please check your OpenRouter API key.';
+          cleanMessage =
+            'Invalid API key. Please check your OpenRouter API key.';
         } else if (error.status === 403) {
-          cleanMessage = 'Access forbidden. Please verify your OpenRouter API key permissions.';
+          cleanMessage =
+            'Access forbidden. Please verify your OpenRouter API key permissions.';
         } else if (error.status === 404) {
           cleanMessage = `Model '${this.model}' not found. Please check the model name.`;
         } else if (error.status === 429) {
           cleanMessage = 'Rate limit exceeded. Please try again later.';
         } else if (error.status >= 500) {
-          cleanMessage = 'OpenRouter service unavailable. Please try again later.';
+          cleanMessage =
+            'OpenRouter service unavailable. Please try again later.';
         }
-        
+
         throw new Error(`OpenRouter API error: ${cleanMessage}`);
       }
-      
+
       if (error instanceof Error) {
         // Handle network errors
         if (error.message.includes('fetch')) {
-          throw new Error('Network error: Unable to connect to OpenRouter API. Please check your internet connection.');
+          throw new Error(
+            'Network error: Unable to connect to OpenRouter API. Please check your internet connection.'
+          );
         }
       }
-      
+
       throw error;
     }
   }
 
-  private buildPrompt(prChanges: string, skillLevels: SkillLevel[], fileTypeAnalysis?: FileTypeAnalysis): string {
-    
+  private buildPrompt(
+    prChanges: string,
+    skillLevels: SkillLevel[],
+    fileTypeAnalysis?: FileTypeAnalysis
+  ): string {
     let fileContextSection = '';
     if (fileTypeAnalysis) {
       const fileTypeSummary = [];
       if (fileTypeAnalysis.codeFiles.length > 0) {
-        fileTypeSummary.push(`**Code files (${fileTypeAnalysis.codeFiles.length}):** ${fileTypeAnalysis.codeFiles.slice(0, 5).join(', ')}${fileTypeAnalysis.codeFiles.length > 5 ? '...' : ''}`);
+        fileTypeSummary.push(
+          `**Code files (${fileTypeAnalysis.codeFiles.length}):** ${fileTypeAnalysis.codeFiles.slice(0, 5).join(', ')}${fileTypeAnalysis.codeFiles.length > 5 ? '...' : ''}`
+        );
       }
       if (fileTypeAnalysis.configFiles.length > 0) {
-        fileTypeSummary.push(`**Configuration files (${fileTypeAnalysis.configFiles.length}):** ${fileTypeAnalysis.configFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.configFiles.length > 3 ? '...' : ''}`);
+        fileTypeSummary.push(
+          `**Configuration files (${fileTypeAnalysis.configFiles.length}):** ${fileTypeAnalysis.configFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.configFiles.length > 3 ? '...' : ''}`
+        );
       }
       if (fileTypeAnalysis.testFiles.length > 0) {
-        fileTypeSummary.push(`**Test files (${fileTypeAnalysis.testFiles.length}):** ${fileTypeAnalysis.testFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.testFiles.length > 3 ? '...' : ''}`);
+        fileTypeSummary.push(
+          `**Test files (${fileTypeAnalysis.testFiles.length}):** ${fileTypeAnalysis.testFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.testFiles.length > 3 ? '...' : ''}`
+        );
       }
       if (fileTypeAnalysis.buildFiles.length > 0) {
-        fileTypeSummary.push(`**Build/CI files (${fileTypeAnalysis.buildFiles.length}):** ${fileTypeAnalysis.buildFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.buildFiles.length > 3 ? '...' : ''}`);
+        fileTypeSummary.push(
+          `**Build/CI files (${fileTypeAnalysis.buildFiles.length}):** ${fileTypeAnalysis.buildFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.buildFiles.length > 3 ? '...' : ''}`
+        );
       }
       if (fileTypeAnalysis.documentationFiles.length > 0) {
-        fileTypeSummary.push(`**Documentation (${fileTypeAnalysis.documentationFiles.length}):** ${fileTypeAnalysis.documentationFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.documentationFiles.length > 3 ? '...' : ''}`);
+        fileTypeSummary.push(
+          `**Documentation (${fileTypeAnalysis.documentationFiles.length}):** ${fileTypeAnalysis.documentationFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.documentationFiles.length > 3 ? '...' : ''}`
+        );
       }
       if (fileTypeAnalysis.otherFiles.length > 0) {
-        fileTypeSummary.push(`**Other files (${fileTypeAnalysis.otherFiles.length}):** ${fileTypeAnalysis.otherFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.otherFiles.length > 3 ? '...' : ''}`);
+        fileTypeSummary.push(
+          `**Other files (${fileTypeAnalysis.otherFiles.length}):** ${fileTypeAnalysis.otherFiles.slice(0, 3).join(', ')}${fileTypeAnalysis.otherFiles.length > 3 ? '...' : ''}`
+        );
       }
-      
+
       if (fileTypeSummary.length > 0) {
         fileContextSection = `
 

@@ -4,18 +4,18 @@
   "description": "GitHub Action to estimate development time for PRs using AI",
   "main": "dist/index.js",
   "scripts": {
-    "build": "pnpm run clean && tsc && esbuild dist/index.js --bundle --platform=node --target=node20 --format=cjs --outfile=dist/main.js --minify --sourcemap && mv dist/main.js dist/index.js && pnpm run clean:artifacts",
+    "build": "pnpm run clean && tsx esbuild.config.ts",
+    "buildnew": "pnpm run clean && tsx esbuild.config.ts",
     "package": "pnpm run build",
     "test": "jest",
     "test-build": "pnpm run build && jest test/",
     "lint": "eslint src/**/*.ts",
-    "format": "prettier --write src/**/*.ts",
-    "clean": "rimraf dist",
-    "clean:artifacts": "rimraf dist/*.d.ts dist/*.d.ts.map dist/*.js.map dist/formatter.js dist/github.js dist/openrouter.js dist/types.js && rimraf dist/main.js.map"
+    "format": "prettier --write src/**/*.ts esbuild.config.ts test/**/*.js",
+    "clean": "rimraf dist"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-username/estimate-dev-time-action.git"
+    "url": "git+https://github.com/BlackDark/estimate-dev-time-action.git"
   },
   "keywords": [
     "github-action",
@@ -23,7 +23,7 @@
     "development-time",
     "ai"
   ],
-  "author": "Your Name",
+  "author": "BlackDark",
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.11.1",
@@ -42,6 +42,7 @@
     "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
     "ts-jest": "^29.4.1",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.41.0"
   }

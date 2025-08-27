@@ -1,4 +1,7 @@
-const { filterDiffByPatterns, parseIgnorePatterns } = require('../dist/index.js');
+const {
+  filterDiffByPatterns,
+  parseIgnorePatterns,
+} = require('../dist/index.js');
 
 describe('Diff Filtering', () => {
   test('parseIgnorePatterns should parse comma-separated patterns', () => {
@@ -34,8 +37,10 @@ index 1234567..abcdefg 100644
 +  return 'world';
 +}`;
 
-    const { filteredDiff, filteredStats } = filterDiffByPatterns(mockDiff, ['dist/**']);
-    
+    const { filteredDiff, filteredStats } = filterDiffByPatterns(mockDiff, [
+      'dist/**',
+    ]);
+
     expect(filteredDiff).toContain('src/main.ts');
     expect(filteredDiff).not.toContain('dist/main.js');
     expect(filteredStats.changedFiles).toBe(1);
@@ -48,7 +53,7 @@ index 1234567..abcdefg 100644
 +console.log('test');`;
 
     const { filteredDiff, filteredStats } = filterDiffByPatterns(mockDiff, []);
-    
+
     expect(filteredDiff).toBe(mockDiff);
     expect(filteredStats.additions).toBe(1); // Now calculates stats even with no patterns
     expect(filteredStats.changedFiles).toBe(1);
@@ -61,7 +66,11 @@ index 1234567..abcdefg 100644
       { file: 'src/main.ts', pattern: 'dist/**', shouldMatch: false },
       { file: 'test.min.js', pattern: '*.min.js', shouldMatch: true },
       { file: 'src/test.min.js', pattern: '*.min.js', shouldMatch: false },
-      { file: 'package-lock.json', pattern: 'package-lock.json', shouldMatch: true },
+      {
+        file: 'package-lock.json',
+        pattern: 'package-lock.json',
+        shouldMatch: true,
+      },
     ];
 
     // We can't easily test the internal shouldIgnoreFile function,
@@ -69,7 +78,7 @@ index 1234567..abcdefg 100644
     testCases.forEach(({ file, pattern, shouldMatch }) => {
       const mockDiff = `diff --git a/${file} b/${file}\n+test line`;
       const { filteredDiff } = filterDiffByPatterns(mockDiff, [pattern]);
-      
+
       if (shouldMatch) {
         expect(filteredDiff).not.toContain(file);
       } else {
@@ -115,13 +124,16 @@ index 4567890..defghij 100644
  # Test Project
 
  This is a test.`;
-    
+
     const result = filterDiffByPatterns(mockDiff, []);
-    
-    
-    expect(result.fileTypeAnalysis.codeFiles).toContain('src/components/Button.tsx');
+
+    expect(result.fileTypeAnalysis.codeFiles).toContain(
+      'src/components/Button.tsx'
+    );
     expect(result.fileTypeAnalysis.configFiles).toContain('package.json');
-    expect(result.fileTypeAnalysis.testFiles).toContain('src/components/Button.test.tsx');
+    expect(result.fileTypeAnalysis.testFiles).toContain(
+      'src/components/Button.test.tsx'
+    );
     expect(result.fileTypeAnalysis.documentationFiles).toContain('README.md');
   });
 });

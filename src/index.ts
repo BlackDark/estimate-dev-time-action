@@ -52,25 +52,27 @@ async function run(): Promise<void> {
 
     // Parse and apply ignore patterns
     const ignorePatterns = parseIgnorePatterns(inputs.ignorePatterns || '');
-    const { filteredDiff, filteredStats, fileTypeAnalysis } = filterDiffByPatterns(
-      prChanges.diffContent,
-      ignorePatterns
-    );
+    const { filteredDiff, filteredStats, fileTypeAnalysis } =
+      filterDiffByPatterns(prChanges.diffContent, ignorePatterns);
 
     // Use filtered stats if filtering was applied, otherwise use original
-    const finalStats = ignorePatterns.length > 0 ? filteredStats : {
-      additions: prChanges.additions,
-      deletions: prChanges.deletions,
-      changedFiles: prChanges.changedFiles
-    };
+    const finalStats =
+      ignorePatterns.length > 0
+        ? filteredStats
+        : {
+            additions: prChanges.additions,
+            deletions: prChanges.deletions,
+            changedFiles: prChanges.changedFiles,
+          };
 
     // Use filtered diff content
-    const finalDiffContent = ignorePatterns.length > 0 ? filteredDiff : prChanges.diffContent;
+    const finalDiffContent =
+      ignorePatterns.length > 0 ? filteredDiff : prChanges.diffContent;
 
     core.info(
       `Original PR: +${prChanges.additions} -${prChanges.deletions} across ${prChanges.changedFiles} files`
     );
-    
+
     if (ignorePatterns.length > 0) {
       core.info(
         `Filtered PR (excluding ${ignorePatterns.length} patterns): +${finalStats.additions} -${finalStats.deletions} across ${finalStats.changedFiles} files`
@@ -85,7 +87,7 @@ async function run(): Promise<void> {
       `Test files: ${fileTypeAnalysis.testFiles.length}`,
       `Documentation: ${fileTypeAnalysis.documentationFiles.length}`,
       `Build/CI: ${fileTypeAnalysis.buildFiles.length}`,
-      `Other: ${fileTypeAnalysis.otherFiles.length}`
+      `Other: ${fileTypeAnalysis.otherFiles.length}`,
     ].join(', ');
     core.info(`File types: ${fileTypeSummary}`);
 
@@ -99,11 +101,14 @@ ${finalDiffContent}
 `.trim();
 
     core.info('Requesting estimation from OpenRouter...');
-    const estimation = await openrouterClient.estimateDevTime({
-      prChanges: changes,
-      skillLevels: validSkillLevels,
-      model: inputs.model!
-    }, fileTypeAnalysis);
+    const estimation = await openrouterClient.estimateDevTime(
+      {
+        prChanges: changes,
+        skillLevels: validSkillLevels,
+        model: inputs.model!,
+      },
+      fileTypeAnalysis
+    );
 
     core.info('Formatting comment...');
     const commentContent = formatEstimationComment(
@@ -120,23 +125,25 @@ ${finalDiffContent}
     core.setOutput('skill-levels', validSkillLevels.join(','));
   } catch (error) {
     let errorMessage = 'Unknown error occurred';
-    
+
     if (error instanceof Error) {
       errorMessage = error.message;
-      
+
       // Log additional context for debugging without exposing full stack trace to user
       core.debug(`Full error details: ${error.stack || error.toString()}`);
-      
+
       // Provide more helpful error messages for common issues
       if (error.message.includes('GITHUB_TOKEN')) {
-        errorMessage = 'GitHub token is missing or invalid. Please ensure GITHUB_TOKEN is properly configured.';
+        errorMessage =
+          'GitHub token is missing or invalid. Please ensure GITHUB_TOKEN is properly configured.';
       } else if (error.message.includes('OpenRouter')) {
         errorMessage = `OpenRouter API error: ${error.message.replace(/^OpenRouter API error:\s*/, '')}`;
       } else if (error.message.includes('No response content')) {
-        errorMessage = 'OpenRouter API returned empty response. Please check your API key and model configuration.';
+        errorMessage =
+          'OpenRouter API returned empty response. Please check your API key and model configuration.';
       }
     }
-    
+
     core.error(`❌ Action failed: ${errorMessage}`);
     core.setFailed(errorMessage);
   }

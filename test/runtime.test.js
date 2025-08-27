@@ -6,7 +6,11 @@ describe('Runtime Tests', () => {
 
   test('bundle should execute without immediate errors', (done) => {
     // Test that the bundle can be loaded and executed by Node.js
-    const child = spawn('node', ['-e', `
+    const child = spawn(
+      'node',
+      [
+        '-e',
+        `
       try {
         const action = require('${indexPath}');
         console.log('SUCCESS: Bundle loaded successfully');
@@ -16,7 +20,10 @@ describe('Runtime Tests', () => {
         console.error('ERROR:', error.message);
         process.exit(1);
       }
-    `], { stdio: 'pipe' });
+    `,
+      ],
+      { stdio: 'pipe' }
+    );
 
     let stdout = '';
     let stderr = '';
