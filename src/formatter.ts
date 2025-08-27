@@ -11,10 +11,10 @@ This PR has been analyzed to estimate development time for different skill level
 `;
 
   const estimationsSection = skillLevels
-    .map(level => {
+    .map((level) => {
       const estimation = response.estimations[level];
       const icon = getComplexityIcon(estimation.complexity);
-      
+
       return `### ${getSkillLevelIcon(level)} ${level} Developer
 - **⏱️ Time Estimate:** ${estimation.timeEstimate}
 - **🎯 Complexity:** ${icon} ${estimation.complexity}

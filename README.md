@@ -5,7 +5,7 @@ A GitHub Action that uses AI to estimate how long it would take developers of di
 ## Features
 
 - 🕒 Estimates development time for Junior, Senior, and Expert developers
-- 🤖 Uses OpenRouter AI models with modern ky HTTP client
+- 🤖 Uses OpenRouter AI models with official OpenAI SDK for robust API handling
 - 💬 Automatically adds/updates comments on PRs with estimates
 - 🎛️ Configurable skill levels and AI models
 - 🆓 Free model available by default

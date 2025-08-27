@@ -11,7 +11,7 @@
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts",
     "clean": "rimraf dist",
-    "clean:artifacts": "rimraf dist"
+    "clean:artifacts": "rimraf dist/*.d.ts dist/*.d.ts.map dist/*.js.map dist/formatter.js dist/github.js dist/openrouter.js dist/types.js && rimraf dist/main.js.map"
   },
   "repository": {
     "type": "git",
@@ -28,7 +28,7 @@
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/github": "^6.0.1",
-    "ky": "^1.7.2"
+    "openai": "^5.16.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.34.0",
@@ -36,7 +36,7 @@
     "@types/node": "^24.3.0",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
-    "esbuild": "^0.21.5",
+    "esbuild": "^0.25.9",
     "eslint": "^9.34.0",
     "jest": "^30.1.0",
     "prettier": "^3.6.2",

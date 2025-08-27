@@ -66,7 +66,7 @@ export class GitHubClient {
         issue_number: prNumber,
       });
 
-      const existingComment = existingComments.data.find(comment => 
+      const existingComment = existingComments.data.find((comment) =>
         comment.body?.includes(commentIdentifier)
       );
 

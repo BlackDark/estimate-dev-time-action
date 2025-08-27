@@ -15,32 +15,42 @@ async function run(): Promise<void> {
     };
 
     const skillLevels: SkillLevel[] = inputs.skillLevels
-      ? inputs.skillLevels.split(',').map(level => level.trim() as SkillLevel)
+      ? inputs.skillLevels.split(',').map((level) => level.trim() as SkillLevel)
       : ['Junior', 'Senior', 'Expert'];
 
-    const validSkillLevels = skillLevels.filter(level => 
+    const validSkillLevels = skillLevels.filter((level) =>
       ['Junior', 'Senior', 'Expert'].includes(level)
     );
 
     if (validSkillLevels.length === 0) {
-      throw new Error('No valid skill levels provided. Valid options: Junior, Senior, Expert');
+      throw new Error(
+        'No valid skill levels provided. Valid options: Junior, Senior, Expert'
+      );
     }
 
     core.info(`Using skill levels: ${validSkillLevels.join(', ')}`);
     core.info(`Using model: ${inputs.model}`);
 
-    const githubToken = process.env.GITHUB_TOKEN || core.getInput('github-token');
+    const githubToken =
+      process.env.GITHUB_TOKEN || core.getInput('github-token');
     if (!githubToken) {
-      throw new Error('GITHUB_TOKEN environment variable or github-token input is required');
+      throw new Error(
+        'GITHUB_TOKEN environment variable or github-token input is required'
+      );
     }
 
     const githubClient = new GitHubClient(githubToken);
-    const openrouterClient = new OpenRouterClient(inputs.openrouterApiKey, inputs.model);
+    const openrouterClient = new OpenRouterClient(
+      inputs.openrouterApiKey,
+      inputs.model
+    );
 
     core.info('Fetching PR changes...');
     const prChanges = await githubClient.getPrChanges();
-    
-    core.info(`PR Summary: +${prChanges.additions} -${prChanges.deletions} across ${prChanges.changedFiles} files`);
+
+    core.info(
+      `PR Summary: +${prChanges.additions} -${prChanges.deletions} across ${prChanges.changedFiles} files`
+    );
 
     const changes = `
 **Files Changed:** ${prChanges.changedFiles}
@@ -59,7 +69,10 @@ ${prChanges.diffContent}
     });
 
     core.info('Formatting comment...');
-    const commentContent = formatEstimationComment(estimation, validSkillLevels);
+    const commentContent = formatEstimationComment(
+      estimation,
+      validSkillLevels
+    );
 
     core.info('Updating PR comment...');
     await githubClient.updateOrCreateComment(commentContent);
@@ -68,9 +81,9 @@ ${prChanges.diffContent}
 
     core.setOutput('estimations', JSON.stringify(estimation.estimations));
     core.setOutput('skill-levels', validSkillLevels.join(','));
-
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error occurred';
     core.error(`Action failed: ${errorMessage}`);
     core.setFailed(errorMessage);
   }
