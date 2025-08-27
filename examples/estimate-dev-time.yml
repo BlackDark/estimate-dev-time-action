@@ -1,0 +1,35 @@
+# Example workflow file for using the Estimate Dev Time Action
+# Place this file at: .github/workflows/estimate-dev-time.yml
+
+name: Estimate PR Development Time
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  estimate:
+    runs-on: ubuntu-latest
+    
+    # Only run on PRs, not on drafts
+    if: github.event.pull_request.draft == false
+    
+    permissions:
+      contents: read
+      pull-requests: write  # Required to comment on PRs
+    
+    steps:
+      - name: Estimate Development Time
+        uses: your-username/estimate-dev-time-action@v1
+        with:
+          # Required: Your OpenRouter API key (store in repository secrets)
+          openrouter-api-key: ${{ secrets.OPENROUTER_API_KEY }}
+          
+          # Optional: Specify a different AI model
+          # model: 'openai/gpt-3.5-turbo'
+          
+          # Optional: Only estimate for specific skill levels
+          # skill-levels: 'Junior,Senior'
+          
+          # Optional: Use a custom GitHub token (usually not needed)
+          # github-token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
