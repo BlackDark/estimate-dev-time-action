@@ -20,6 +20,7 @@ export interface ActionInputs {
   openrouterApiKey: string;
   model?: string;
   skillLevels?: string;
+  ignorePatterns?: string;
 }
 
 export interface PrChanges {

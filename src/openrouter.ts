@@ -83,26 +83,37 @@ export class OpenRouterClient {
     const levelsText = skillLevels.join(', ');
 
     return `
-Analyze the following PR changes and estimate how long it would take developers of different skill levels to implement these changes from scratch.
+You are an experienced software engineering manager. Analyze the following PR changes and provide REALISTIC time estimates for implementing these specific changes. Focus on actual development work and avoid overestimating.
+
+**IMPORTANT GUIDELINES:**
+- This represents changes to an EXISTING codebase, not building from scratch
+- Generated files, build artifacts, and lock files have been filtered out
+- Estimate ONLY the time needed to make these specific changes
+- Consider that developers can copy/paste/modify existing patterns
+- Most changes involve adapting existing code rather than creating new architecture
 
 **PR Changes:**
 \`\`\`
 ${prChanges}
 \`\`\`
 
-Please provide time estimates for the following skill levels: ${levelsText}
-
 **Skill Level Definitions:**
-- **Junior**: 0-2 years experience, needs guidance, focuses on basic implementation
-- **Senior**: 3-7 years experience, works independently, considers edge cases and best practices
-- **Expert**: 8+ years experience, optimizes for performance, maintainability, and system design
+- **Junior**: 0-2 years experience, slower at debugging, needs some guidance
+- **Senior**: 3-7 years experience, works efficiently, knows common patterns
+- **Expert**: 8+ years experience, very fast implementation, rarely gets stuck
 
-For each skill level, consider:
-1. Time to understand the requirements
-2. Time to research and plan the implementation
-3. Time to write the code
-4. Time for testing and debugging
-5. Time for code review iterations
+**Time Estimation Guidelines:**
+- Small config/text changes: 15-30 minutes
+- Simple function modifications: 30 minutes - 2 hours  
+- Adding new features: 2-8 hours
+- Complex refactoring: 1-3 days
+- Major architectural changes: 3-5 days
+
+**Consider for each estimate:**
+1. Understanding the existing code context (usually quick for small changes)
+2. Making the actual changes (main time component)
+3. Basic testing and debugging
+4. Creating/updating tests if needed
 
 **Response Format (JSON):**
 \`\`\`json
@@ -112,8 +123,8 @@ For each skill level, consider:
       .map(
         (level) => `
     "${level}": {
-      "timeEstimate": "X hours/days",
-      "reasoning": "Brief explanation of the estimate",
+      "timeEstimate": "X hours" or "X days",
+      "reasoning": "Brief, specific explanation focusing on the actual changes",
       "complexity": "Low/Medium/High"
     }`
       )
@@ -122,7 +133,7 @@ For each skill level, consider:
 }
 \`\`\`
 
-Be realistic and consider that this includes all aspects of development, not just coding time.
+Be concise and realistic. Most PR changes should be measured in hours, not days.
 `;
   }
 

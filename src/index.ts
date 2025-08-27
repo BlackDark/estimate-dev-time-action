@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import { OpenRouterClient } from './openrouter';
 import { GitHubClient } from './github';
 import { formatEstimationComment } from './formatter';
+import { filterDiffByPatterns, parseIgnorePatterns } from './diff-filter';
 import { ActionInputs, SkillLevel } from './types';
 
 async function run(): Promise<void> {
@@ -12,6 +13,7 @@ async function run(): Promise<void> {
       openrouterApiKey: core.getInput('openrouter-api-key', { required: true }),
       model: core.getInput('model') || 'meta-llama/llama-3.2-3b-instruct:free',
       skillLevels: core.getInput('skill-levels'),
+      ignorePatterns: core.getInput('ignore-patterns'),
     };
 
     const skillLevels: SkillLevel[] = inputs.skillLevels
@@ -48,17 +50,41 @@ async function run(): Promise<void> {
     core.info('Fetching PR changes...');
     const prChanges = await githubClient.getPrChanges();
 
-    core.info(
-      `PR Summary: +${prChanges.additions} -${prChanges.deletions} across ${prChanges.changedFiles} files`
+    // Parse and apply ignore patterns
+    const ignorePatterns = parseIgnorePatterns(inputs.ignorePatterns || '');
+    const { filteredDiff, filteredStats } = filterDiffByPatterns(
+      prChanges.diffContent,
+      ignorePatterns
     );
 
+    // Use filtered stats if filtering was applied, otherwise use original
+    const finalStats = ignorePatterns.length > 0 ? filteredStats : {
+      additions: prChanges.additions,
+      deletions: prChanges.deletions,
+      changedFiles: prChanges.changedFiles
+    };
+
+    // Use filtered diff content
+    const finalDiffContent = ignorePatterns.length > 0 ? filteredDiff : prChanges.diffContent;
+
+    core.info(
+      `Original PR: +${prChanges.additions} -${prChanges.deletions} across ${prChanges.changedFiles} files`
+    );
+    
+    if (ignorePatterns.length > 0) {
+      core.info(
+        `Filtered PR (excluding ${ignorePatterns.length} patterns): +${finalStats.additions} -${finalStats.deletions} across ${finalStats.changedFiles} files`
+      );
+      core.info(`Ignored patterns: ${ignorePatterns.join(', ')}`);
+    }
+
     const changes = `
-**Files Changed:** ${prChanges.changedFiles}
-**Lines Added:** +${prChanges.additions}
-**Lines Deleted:** -${prChanges.deletions}
+**Files Changed:** ${finalStats.changedFiles}
+**Lines Added:** +${finalStats.additions}
+**Lines Deleted:** -${finalStats.deletions}
 
 **Diff:**
-${prChanges.diffContent}
+${finalDiffContent}
 `.trim();
 
     core.info('Requesting estimation from OpenRouter...');
@@ -112,3 +138,4 @@ if (require.main === module) {
 export { run };
 export { OpenRouterClient } from './openrouter';
 export { GitHubClient } from './github';
+export { filterDiffByPatterns, parseIgnorePatterns } from './diff-filter';

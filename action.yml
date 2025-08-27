@@ -22,6 +22,10 @@ inputs:
     description: 'GitHub token for API access'
     required: false
     default: ${{ github.token }}
+  ignore-patterns:
+    description: 'Comma-separated list of glob patterns to ignore (e.g., "dist/**,build/**,*.generated.ts")'
+    required: false
+    default: 'dist/**,build/**,*.min.js,*.bundle.js,package-lock.json,pnpm-lock.yaml,yarn.lock,*.map'
 
 outputs:
   estimations:
