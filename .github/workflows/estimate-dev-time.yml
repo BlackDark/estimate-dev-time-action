@@ -2,7 +2,7 @@ name: Estimate PR Development Time
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, ready_for_review]
 
 jobs:
   estimate:
