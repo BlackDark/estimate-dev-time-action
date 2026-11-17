@@ -2,7 +2,11 @@ name: Estimate PR Development Time
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, ready_for_review]
+
+concurrency:
+  group: estimate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   estimate:
@@ -16,8 +20,11 @@ jobs:
       pull-requests: write # Required to comment on PRs
 
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Estimate Development Time
-        uses: BlackDark/estimate-dev-time-action@refactor/node
+        uses: ./ # zizmor: ignore[self-repository]
         with:
           # Required: Your OpenRouter API key (store in repository secrets)
           openrouter-api-key: ${{ secrets.OPENROUTER_API_KEY }}

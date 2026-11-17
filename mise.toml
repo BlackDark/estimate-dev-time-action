@@ -1,0 +1,8 @@
+[tools]
+actionlint = "1.7.12"
+node = "26.13.1"
+pnpm = "12.20.0"
+
+[tasks.check]
+description = "Install, lint, test, and build the action"
+run = "pnpm install --frozen-lockfile && pnpm lint && pnpm test && pnpm build"

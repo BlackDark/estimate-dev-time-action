@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { EstimationRequest, EstimationResponse, SkillLevel } from './types';
 import { FileTypeAnalysis } from './diff-filter';
 
-const DEFAULT_MODEL = 'meta-llama/llama-3.2-3b-instruct:free';
+const DEFAULT_MODEL = 'cohere/north-mini-code:free';
 
 export class OpenRouterClient {
   private client: OpenAI;
@@ -31,29 +31,34 @@ export class OpenRouterClient {
     );
 
     try {
-      const completion = await this.client.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: 'system',
-            content:
-              'You are an expert software developer and project manager who specializes in estimating development time based on code changes. You provide accurate, realistic time estimates for different skill levels.',
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.1,
-        max_tokens: 2000,
-      });
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const completion = await this.client.chat.completions.create({
+          model: this.model,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You are an expert software developer and project manager who specializes in estimating development time based on code changes. You provide accurate, realistic time estimates for different skill levels.',
+            },
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+          temperature: 0.1,
+          max_tokens: 2000,
+        });
 
-      const content = completion.choices[0]?.message?.content;
-      if (!content) {
-        throw new Error('No response content from OpenRouter');
+        const content = completion.choices[0]?.message?.content;
+        try {
+          // Empty content is retried like malformed JSON.
+          if (!content) throw new Error('No response content from OpenRouter');
+          return this.parseResponse(content, request.skillLevels);
+        } catch (error) {
+          if (attempt === 1) throw error;
+        }
       }
-
-      return this.parseResponse(content, request.skillLevels);
+      throw new Error('No valid response from OpenRouter');
     } catch (error) {
       if (error instanceof OpenAI.APIError) {
         // Provide cleaner error messages based on status codes
@@ -194,7 +199,7 @@ ${prChanges}
       .map(
         (level) => `
     "${level}": {
-      "timeEstimate": "X hours" or "X days",
+      "timeEstimate": "2 hours",
       "reasoning": "Brief, specific explanation focusing on the actual changes",
       "complexity": "Low/Medium/High"
     }`

@@ -61,7 +61,7 @@ jobs:
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
 | `openrouter-api-key` | Your OpenRouter API key | ✅ | - |
-| `model` | OpenRouter model to use | ❌ | `meta-llama/llama-3.2-3b-instruct:free` |
+| `model` | OpenRouter model to use | ❌ | `cohere/north-mini-code:free` |
 | `skill-levels` | Comma-separated skill levels to estimate | ❌ | `Junior,Senior,Expert` |
 | `github-token` | GitHub token for API access | ❌ | `${{ github.token }}` |
 | `ignore-patterns` | Comma-separated glob patterns to ignore | ❌ | `dist/**,build/**,*.min.js,*.bundle.js,package-lock.json,pnpm-lock.yaml,yarn.lock,*.map` |
@@ -149,7 +149,7 @@ This PR has been analyzed to estimate development time for different skill level
 
 ## Supported Models
 
-The action uses OpenRouter, which provides access to many AI models. The default free model is `meta-llama/llama-3.2-3b-instruct:free`. 
+The action uses OpenRouter, which provides access to many AI models. The default free model is `cohere/north-mini-code:free`. 
 
 Popular alternatives include:
 - `openai/gpt-3.5-turbo`

@@ -11,7 +11,7 @@ async function run(): Promise<void> {
 
     const inputs: ActionInputs = {
       openrouterApiKey: core.getInput('openrouter-api-key', { required: true }),
-      model: core.getInput('model') || 'meta-llama/llama-3.2-3b-instruct:free',
+      model: core.getInput('model') || 'cohere/north-mini-code:free',
       skillLevels: core.getInput('skill-levels'),
       ignorePatterns: core.getInput('ignore-patterns'),
     };
