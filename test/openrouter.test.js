@@ -38,3 +38,20 @@ test('fails after the bounded retry if JSON remains malformed', async () => {
   ).rejects.toThrow('Failed to parse OpenRouter response');
   expect(mockCreate).toHaveBeenCalledTimes(2);
 });
+
+test('retries once when the model returns empty content', async () => {
+  mockCreate
+    .mockResolvedValueOnce(response(''))
+    .mockResolvedValueOnce(response(valid));
+  const result = await new OpenRouterClient('test').estimateDevTime(request);
+  expect(result.estimations.Senior.timeEstimate).toBe('2 hours');
+  expect(mockCreate).toHaveBeenCalledTimes(2);
+});
+
+test('fails after the bounded retry if content stays empty', async () => {
+  mockCreate.mockResolvedValue(response(null));
+  await expect(
+    new OpenRouterClient('test').estimateDevTime(request)
+  ).rejects.toThrow('No response content from OpenRouter');
+  expect(mockCreate).toHaveBeenCalledTimes(2);
+});

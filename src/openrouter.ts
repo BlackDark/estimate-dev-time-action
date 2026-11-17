@@ -50,11 +50,9 @@ export class OpenRouterClient {
         });
 
         const content = completion.choices[0]?.message?.content;
-        if (!content) {
-          throw new Error('No response content from OpenRouter');
-        }
-
         try {
+          // Empty content is retried like malformed JSON.
+          if (!content) throw new Error('No response content from OpenRouter');
           return this.parseResponse(content, request.skillLevels);
         } catch (error) {
           if (attempt === 1) throw error;
