@@ -5,7 +5,7 @@ GitHub Action that estimates pull-request development time from the diff using a
 ## Verify
 
 - `mise run check`: frozen install, ESLint, Jest, and the esbuild bundle.
-- CI additionally requires `git diff --exit-code -- dist` after the build; commit regenerated `dist/index.js`.
+- CI additionally requires `git diff --exit-code HEAD -- dist` after the build; commit regenerated `dist/index.js`.
 - The PR estimation workflow runs the action from the same checkout, not another branch.
 
 CI uses one required `check` gate plus actionlint, zizmor, and strict Renovate validation.
