@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { EstimationRequest, EstimationResponse, SkillLevel } from './types';
 import { FileTypeAnalysis } from './diff-filter';
 
-const DEFAULT_MODEL = 'meta-llama/llama-3.2-3b-instruct:free';
+const DEFAULT_MODEL = 'cohere/north-mini-code:free';
 
 export class OpenRouterClient {
   private client: OpenAI;

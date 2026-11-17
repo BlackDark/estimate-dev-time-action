@@ -13,7 +13,7 @@ inputs:
   model:
     description: 'OpenRouter model to use for estimation'
     required: false
-    default: 'meta-llama/llama-3.2-3b-instruct:free'
+    default: 'cohere/north-mini-code:free'
   skill-levels:
     description: 'Comma-separated list of skill levels to estimate for (Junior, Senior, Expert)'
     required: false
